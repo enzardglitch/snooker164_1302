@@ -10,6 +10,7 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
+        Time.timeScale = 1f;
         AudioManager.instance.LoadCurrentMasterVolume();
         AudioManager.instance.PlayBGM(0);
     }

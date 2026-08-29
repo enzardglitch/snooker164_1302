@@ -13,10 +13,12 @@ public class Hole : MonoBehaviour
         if (b.Point ==0)
         {
             GameManager.instance.GuiScore.text = "IDIOT";
+            GameManager.instance.EndGame();
             return;
         }
-        GameManager.instance.PlayerScore += b.Point;
-        GameManager.instance.UpdateScore();
+
+        PlayerPrefs.SetInt($"{(int)b.color}Alive", 0);
+        GameManager.instance.AddScore(b.Point);
         AudioManager.instance.PlaySFX(2);
         Destroy(b.gameObject);
     }

@@ -2,15 +2,17 @@ using UnityEngine;
 
 public class DontDestroy : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static DontDestroy Instance { get; private set; }
+    void Awake()
     {
-        DontDestroyOnLoad(gameObject);
-    }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return; // Exit early so the rest of Awake doesn't run
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Set this object as the definitive instance and protect it from scene loads
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 }

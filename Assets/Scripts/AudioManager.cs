@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.UIElements;
 
 public class AudioManager : MonoBehaviour
 {
@@ -14,28 +15,26 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField]
     public static AudioManager instance;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
 
     void Awake()
     {
-        instance = this;
-    }
-    void Start()
-    {
-        
-    }
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return; // Exit early so the rest of Awake doesn't run
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Set this object as the definitive instance and protect it from scene loads
+        instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void StopAllBGM()
     {
-        foreach (var background in bgm)
+        foreach (AudioSource background in bgm)
         {
             background.Stop();
+            
         }
     }
 
@@ -47,7 +46,7 @@ public class AudioManager : MonoBehaviour
             Debug.LogError("Invalid BGM index: " + index);
             return;
         }
-        bgm[index].Play(); //bgm[i].PlayDelayed(2f);
+        bgm[index].Play();
     }
 
     public void PlaySFX(int index)

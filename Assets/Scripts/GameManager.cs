@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour
     private int playerScore;
     public int PlayerScore { get { return playerScore; } set { playerScore = value; } }
     public int BallScore { get; set; }
+
+    private int playerAttempt = 0;
 
     [SerializeField]
 
@@ -43,10 +46,12 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
     }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void Start()
     {
+        Time.timeScale = 1f;
+        UIManager.instance.ShowGameOver(false);
+
+
         CameraBehindBall();
 
         SetBall(BallColor.Red);
@@ -61,6 +66,10 @@ public class GameManager : MonoBehaviour
         {
             LoadGame();
         }
+
+        UIManager.instance.UpdateScore(playerScore);
+        UIManager.instance.UpdateAttempt(playerAttempt);
+
     }
 
     // Update is called once per frame
@@ -76,11 +85,11 @@ public class GameManager : MonoBehaviour
         }
         if (Keyboard.current.leftArrowKey.isPressed || Keyboard.current.aKey.isPressed )
         {
-            xInput = -0.1f;
+            xInput = -50f;
         }
         else if (Keyboard.current.rightArrowKey.isPressed || Keyboard.current.dKey.isPressed)
         {
-            xInput = 0.1f;
+            xInput = 50f;
         }
         else
         {
@@ -99,6 +108,7 @@ public class GameManager : MonoBehaviour
     private void SetBall(BallColor col)
     {
         GameObject obj = Instantiate(ballPrefab,ballPositions[(int)col].transform.position, Quaternion.identity);
+        obj.transform.SetParent(ballGroup.transform);
         Ball b = obj.GetComponent<Ball>();
         b.SetColorAndPoint(col);
         
@@ -107,6 +117,7 @@ public class GameManager : MonoBehaviour
 
     private void ShootBall()
     {
+        AudioManager.instance.PlaySFX(0);
         ballLine.SetActive(false);
         CameraBehindBall();
 
@@ -117,7 +128,6 @@ public class GameManager : MonoBehaviour
         }
         rd.AddRelativeForce(Vector3.forward*50, ForceMode.Impulse);
 
-        rotateReset = false;
         cam.transform.parent = null;
         cam.transform.position = new Vector3(0, 30f, -42f);
         cam.transform.eulerAngles = new Vector3(45f, 0f, 0f);
@@ -128,21 +138,17 @@ public class GameManager : MonoBehaviour
     {
         if (cueball != null)
         {
-            cueball.transform.Rotate(new Vector3(0f, xInput, 0f));
+            cueball.transform.Rotate(new Vector3(0f, xInput*Time.deltaTime, 0f));
         }
     }
 
-    private bool rotateReset = false;
-    private bool isMoving = false;
-
     private void StopBall()
     {
+        EndAttempt();
         Rigidbody rd = cueball.GetComponent<Rigidbody>();
         
 
-        //if ((rd.linearVelocity.magnitude <= 0.01f )&& (rotateReset == false))
         {
-            rotateReset = true;
             cueball.transform.eulerAngles = new Vector3(0f, 0f, 0f);
             rd.linearVelocity = Vector3.zero;
             rd.angularVelocity = Vector3.zero;
@@ -158,48 +164,100 @@ public class GameManager : MonoBehaviour
         cam.transform.eulerAngles = new Vector3(30f, 0f, 0f);
     }
 
-    public void UpdateScore()
+    public void AddScore(int score)
     {
-        GuiScore.text = "Score: " + PlayerScore.ToString();
+        playerScore += score;
+        UIManager.instance.UpdateScore(playerScore);
     }
 
-    public void SaveGame()
+    private void EndAttempt()
     {
-        StopBall();
+        playerAttempt++;
+        UIManager.instance.UpdateAttempt(playerAttempt);
+        if (playerAttempt >= 10)
+        {
+            EndGame();
+        }
+    }
+
+    private void SaveGame()
+    {
 
         if (cueball != null)
         {
-
+            PlayerPrefs.SetInt("playerScore", playerScore);
+            PlayerPrefs.SetInt("playerAttempt", playerAttempt);
 
             PlayerPrefs.SetFloat("cueBallPosX", cueball.transform.position.x);
             PlayerPrefs.SetFloat("cueBallPosY", cueball.transform.position.y);
             PlayerPrefs.SetFloat("cueBallPosZ", cueball.transform.position.z);
+
+            foreach (Transform ball in ballGroup.transform)
+            {
+                BallColor ballcolor = ball.gameObject.GetComponent<Ball>().color;
+                PlayerPrefs.SetFloat($"{(int)ballcolor}PosX", ball.transform.position.x);
+                PlayerPrefs.SetFloat($"{(int)ballcolor}PosY", ball.transform.position.y);
+                PlayerPrefs.SetFloat($"{(int)ballcolor}PosZ", ball.transform.position.z);
+
+                PlayerPrefs.SetInt($"{(int)ballcolor}Alive", 1);
+                print(ballcolor);
+            }
+
             Debug.Log("Saved");
         }
         
     }
 
-    public void LoadGame()
+    private void LoadGame()
     {
-        StopBall();
         if (cueball != null)
         {
+            playerScore = PlayerPrefs.GetInt("playerScore", 0);
+            playerAttempt = PlayerPrefs.GetInt("playerAttempt", 0);
+
             float x = PlayerPrefs.GetFloat("cueBallPosX", 0f);
             float y = PlayerPrefs.GetFloat("cueBallPosY", 0f);
             float z = PlayerPrefs.GetFloat("cueBallPosZ", 0f);
             cueball.transform.position = new Vector3(x, y, z);
-            Debug.Log("Loaded");
+
+            foreach (Transform ball in ballGroup.transform)
+            {
+                BallColor ballcolor = ball.gameObject.GetComponent<Ball>().color;
+                print(ballcolor);
+
+                int alive = PlayerPrefs.GetInt($"{(int)ballcolor}Alive", 0);
+
+                if (alive == 0)
+                {
+                    Destroy(ball.gameObject);
+                    continue;
+                }
+                float bx = PlayerPrefs.GetFloat($"{(int)ballcolor}PosX", 0f);
+                float by = PlayerPrefs.GetFloat($"{(int)ballcolor}PosY", 0f);
+                float bz = PlayerPrefs.GetFloat($"{(int)ballcolor}PosZ", 0f);
+
+                ball.position = new Vector3(bx, by, bz);
+            }
+
+                Debug.Log("Loaded");
         }
     }   
 
-    private void CreateGame()
+    public void EndGame()
     {
-
+        playerAttempt = 10;
+        Time.timeScale = 0f;
+        UIManager.instance.ShowGameOver(true);
     }
 
-    private void EndGame()
+    public void Exit()
     {
-        Time.timeScale = 0f;
+        if (playerAttempt < 10)
+        {
+            SaveGame();
+        }
+        
+        SceneManager.LoadScene("MainMenu");
     }
 }
 

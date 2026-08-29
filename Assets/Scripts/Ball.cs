@@ -24,8 +24,8 @@ public class Ball : MonoBehaviour
     [SerializeField]
     private MeshRenderer rd;
 
-    [SerializeField]
-    private BallColor color;
+
+    public BallColor color;
 
 
 
@@ -36,6 +36,7 @@ public class Ball : MonoBehaviour
 
     public void SetColorAndPoint(BallColor col)
     {
+        color = col;
         switch (col)
         {
             case BallColor.White:
