@@ -31,6 +31,8 @@ public class UIManager : MonoBehaviour
     public void ShowGameOver(bool show)
     {
         gameOver.SetActive(show);
+        TMP_Text textScore = gameOver.transform.Find("Score").GetComponent<TMP_Text>();
+        textScore.text = $"You have ended the game with {GameManager.instance.PlayerScore} scores.";
     }
 
     public void Exit()
