@@ -10,6 +10,10 @@ public class GameManager : MonoBehaviour
     public int BallScore { get; set; }
 
     [SerializeField]
+
+    private GameObject ballGroup;
+
+    [SerializeField]
     private GameObject[] ballPositions;
 
     [SerializeField]
@@ -32,7 +36,8 @@ public class GameManager : MonoBehaviour
     public TMP_Text GuiScore { get { return guiScore; } set { guiScore = value; } }
 
     public static GameManager instance;
-
+    
+    
 
     void Awake()
     {
@@ -44,14 +49,13 @@ public class GameManager : MonoBehaviour
     {
         CameraBehindBall();
 
-        SetBall(BallColor.White, 0);
-        SetBall(BallColor.Red, 1);
-        SetBall(BallColor.Yellow, 2);
-        SetBall(BallColor.Green, 3);
-        SetBall(BallColor.Brown, 4);
-        SetBall(BallColor.Blue, 5);
-        SetBall(BallColor.Pink, 6);
-        SetBall(BallColor.Black, 7);
+        SetBall(BallColor.Red);
+        SetBall(BallColor.Yellow);
+        SetBall(BallColor.Green);
+        SetBall(BallColor.Brown);
+        SetBall(BallColor.Blue);
+        SetBall(BallColor.Pink);
+        SetBall(BallColor.Black);
 
         if (Settings.fromSave == true)
         {
@@ -92,9 +96,9 @@ public class GameManager : MonoBehaviour
         
     }
 
-    private void SetBall(BallColor col, int i)
+    private void SetBall(BallColor col)
     {
-        GameObject obj = Instantiate(ballPrefab,ballPositions[i].transform.position, Quaternion.identity);
+        GameObject obj = Instantiate(ballPrefab,ballPositions[(int)col].transform.position, Quaternion.identity);
         Ball b = obj.GetComponent<Ball>();
         b.SetColorAndPoint(col);
         
@@ -128,19 +132,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [SerializeField]
     private bool rotateReset = false;
-
-    [SerializeField]
     private bool isMoving = false;
-    private void CheckVelocity()
-    {
-        Rigidbody rd = cueball.GetComponent<Rigidbody>();
-        if (rd.linearVelocity.magnitude > 1f)
-        {
-
-        }
-    }
 
     private void StopBall()
     {
@@ -176,6 +169,8 @@ public class GameManager : MonoBehaviour
 
         if (cueball != null)
         {
+
+
             PlayerPrefs.SetFloat("cueBallPosX", cueball.transform.position.x);
             PlayerPrefs.SetFloat("cueBallPosY", cueball.transform.position.y);
             PlayerPrefs.SetFloat("cueBallPosZ", cueball.transform.position.z);
@@ -196,6 +191,16 @@ public class GameManager : MonoBehaviour
             Debug.Log("Loaded");
         }
     }   
+
+    private void CreateGame()
+    {
+
+    }
+
+    private void EndGame()
+    {
+        Time.timeScale = 0f;
+    }
 }
 
 

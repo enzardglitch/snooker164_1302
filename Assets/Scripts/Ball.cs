@@ -15,7 +15,7 @@ public enum BallColor
 }
 
 
-public class Ball : MonoBehaviour, IPointerClickHandler
+public class Ball : MonoBehaviour
 {
     [SerializeField]
     private int point;
@@ -27,28 +27,11 @@ public class Ball : MonoBehaviour, IPointerClickHandler
     [SerializeField]
     private BallColor color;
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        Debug.Log(point);
-        GameManager.instance.PlayerScore += point;
-        Destroy(gameObject);
-    }
+
 
     void Awake()
     {
         rd = GetComponent<MeshRenderer>();
-    }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void SetColorAndPoint(BallColor col)

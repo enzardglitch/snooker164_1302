@@ -15,6 +15,11 @@ public class AudioManager : MonoBehaviour
     [SerializeField]
     public static AudioManager instance;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    void Awake()
+    {
+        instance = this;
+    }
     void Start()
     {
         
